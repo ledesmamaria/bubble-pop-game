@@ -16,8 +16,8 @@ body {
 h1 {
     color: #ffffff;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-    margin-bottom: 25px;
     font-size: 2.2rem;
+    margin: 0 0 25px 0;
 }
 
 #contenedor {
@@ -48,7 +48,8 @@ h1 {
     font-weight: 600;
     font-size: 1.1rem;
     color: #333;
-    background: #f0f2ff;
+    background: #e4e8fb;
+    border: 1px solid #d3d8f5;
     padding: 10px 14px;
     border-radius: 10px;
 }
@@ -74,6 +75,72 @@ h1 {
     width: 100%;
     background: linear-gradient(90deg, #667eea, #764ba2);
     transition: width 1s linear;
+}
+
+.separador {
+    width: 100%;
+    border: none;
+    border-top: 1px solid #eee;
+    margin: 4px 0;
+}
+
+/* Fila del control de sonido: texto a la izquierda, interruptor a la derecha */
+.fila-sonido {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.etiqueta-sonido {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #555;
+}
+
+/* Interruptor tipo "switch" (patrón estándar de UI para controles on/off) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 42px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.switch .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #ccc;
+    border-radius: 24px;
+    transition: background-color 0.2s ease;
+}
+
+.switch .slider::before {
+    content: "";
+    position: absolute;
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    border-radius: 50%;
+    transition: transform 0.2s ease;
+}
+
+.switch input:checked + .slider {
+    background-color: #764ba2;
+}
+
+.switch input:checked + .slider::before {
+    transform: translateX(18px);
 }
 
 #btnInicio {

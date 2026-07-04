@@ -10,6 +10,33 @@ function iniciar() {
     const titulo = document.createElement("h1");
     titulo.textContent = "🫧 Bubble Pop";
 
+    // Recuperamos la preferencia de sonido guardada (por defecto, activado)
+    let sonidoActivado = localStorage.getItem("sonidoActivado");
+    sonidoActivado = sonidoActivado === null ? true : sonidoActivado === "true";
+
+    const filaSonido = document.createElement("div");
+    filaSonido.setAttribute("class", "fila-sonido");
+
+    const etiquetaSonido = document.createElement("span");
+    etiquetaSonido.setAttribute("class", "etiqueta-sonido");
+    etiquetaSonido.textContent = "Sonido";
+
+    const switchSonido = document.createElement("label");
+    switchSonido.setAttribute("class", "switch");
+
+    const inputSonido = document.createElement("input");
+    inputSonido.setAttribute("type", "checkbox");
+    inputSonido.checked = sonidoActivado;
+
+    const slider = document.createElement("span");
+    slider.setAttribute("class", "slider");
+
+    switchSonido.appendChild(inputSonido);
+    switchSonido.appendChild(slider);
+
+    filaSonido.appendChild(etiquetaSonido);
+    filaSonido.appendChild(switchSonido);
+
     const panelIzquierdo = document.createElement("div");
     panelIzquierdo.setAttribute("id", "panelIzquierdo");
 
@@ -42,6 +69,9 @@ function iniciar() {
     const contenidoMaxima = document.createTextNode("Récord: " + puntuacionMaxima);
     textoMaxima.appendChild(contenidoMaxima);
 
+    const separador = document.createElement("hr");
+    separador.setAttribute("class", "separador");
+
     const botonInicio = document.createElement("button");
     botonInicio.textContent = "Comenzar juego";
     botonInicio.setAttribute("id", "btnInicio");
@@ -51,6 +81,8 @@ function iniciar() {
     panelIzquierdo.appendChild(barraContenedor);
     panelIzquierdo.appendChild(textoActual);
     panelIzquierdo.appendChild(textoMaxima);
+    panelIzquierdo.appendChild(separador);
+    panelIzquierdo.appendChild(filaSonido);
     panelIzquierdo.appendChild(botonInicio);
 
     const zonaJuego = document.createElement("div");
@@ -76,8 +108,17 @@ function iniciar() {
         }
     }
 
+    // Cambia entre sonido activado/silenciado y guarda la preferencia
+    function alternarSonido() {
+        sonidoActivado = inputSonido.checked;
+        localStorage.setItem("sonidoActivado", sonidoActivado);
+    }
+
     // Genera un sonido corto tipo "pop" usando el sintetizador del navegador (sin archivos externos)
     function reproducirSonidoPop() {
+        if (!sonidoActivado) {
+            return;
+        }
         const contextoAudio = new (window.AudioContext || window.webkitAudioContext)();
         const oscilador = contextoAudio.createOscillator();
         const volumen = contextoAudio.createGain();
@@ -224,4 +265,5 @@ function iniciar() {
     }
 
     crearEvento(botonInicio, "click", iniciarJuego);
+    crearEvento(inputSonido, "change", alternarSonido);
 }
