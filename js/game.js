@@ -17,6 +17,17 @@ function iniciar() {
     instrucciones.setAttribute("class", "instrucciones");
     instrucciones.textContent = "Pincha las burbujas antes de que desaparezcan (2 segundos cada una).";
 
+    const textoTiempo = document.createElement("p");
+    textoTiempo.setAttribute("class", "temporizador");
+    const contenidoTiempo = document.createTextNode(DURACION_PARTIDA + "s");
+    textoTiempo.appendChild(contenidoTiempo);
+
+    const barraContenedor = document.createElement("div");
+    barraContenedor.setAttribute("class", "barra-contenedor");
+    const barraRelleno = document.createElement("div");
+    barraRelleno.setAttribute("class", "barra-relleno");
+    barraContenedor.appendChild(barraRelleno);
+
     const textoActual = document.createElement("p");
     textoActual.setAttribute("class", "marcador");
     const contenidoActual = document.createTextNode("Puntuación: 0");
@@ -31,17 +42,13 @@ function iniciar() {
     const contenidoMaxima = document.createTextNode("Récord: " + puntuacionMaxima);
     textoMaxima.appendChild(contenidoMaxima);
 
-    const textoTiempo = document.createElement("p");
-    textoTiempo.setAttribute("class", "temporizador");
-    const contenidoTiempo = document.createTextNode(DURACION_PARTIDA + "s");
-    textoTiempo.appendChild(contenidoTiempo);
-
     const botonInicio = document.createElement("button");
     botonInicio.textContent = "Comenzar juego";
     botonInicio.setAttribute("id", "btnInicio");
 
     panelIzquierdo.appendChild(instrucciones);
     panelIzquierdo.appendChild(textoTiempo);
+    panelIzquierdo.appendChild(barraContenedor);
     panelIzquierdo.appendChild(textoActual);
     panelIzquierdo.appendChild(textoMaxima);
     panelIzquierdo.appendChild(botonInicio);
@@ -69,12 +76,33 @@ function iniciar() {
         }
     }
 
+    // Genera un sonido corto tipo "pop" usando el sintetizador del navegador (sin archivos externos)
+    function reproducirSonidoPop() {
+        const contextoAudio = new (window.AudioContext || window.webkitAudioContext)();
+        const oscilador = contextoAudio.createOscillator();
+        const volumen = contextoAudio.createGain();
+
+        oscilador.type = "sine";
+        oscilador.frequency.setValueAtTime(600, contextoAudio.currentTime);
+        oscilador.frequency.exponentialRampToValueAtTime(150, contextoAudio.currentTime + 0.1);
+
+        volumen.gain.setValueAtTime(0.15, contextoAudio.currentTime);
+        volumen.gain.exponentialRampToValueAtTime(0.001, contextoAudio.currentTime + 0.1);
+
+        oscilador.connect(volumen);
+        volumen.connect(contextoAudio.destination);
+
+        oscilador.start();
+        oscilador.stop(contextoAudio.currentTime + 0.1);
+    }
+
     function iniciarJuego() {
         botonInicio.disabled = true;
         puntuacionActual = 0;
         segundosRestantes = DURACION_PARTIDA;
         contenidoActual.nodeValue = "Puntuación: " + puntuacionActual;
         contenidoTiempo.nodeValue = segundosRestantes + "s";
+        barraRelleno.style.width = "100%";
 
         crearBurbuja();
         intervaloBurbujas = setInterval(crearBurbuja, 1000);
@@ -82,6 +110,7 @@ function iniciar() {
         intervaloTiempo = setInterval(function () {
             segundosRestantes--;
             contenidoTiempo.nodeValue = segundosRestantes + "s";
+            barraRelleno.style.width = (segundosRestantes / DURACION_PARTIDA * 100) + "%";
             if (segundosRestantes <= 0) {
                 terminarJuego();
             }
@@ -106,6 +135,7 @@ function iniciar() {
         crearEvento(burbuja, "click", function () {
             puntuacionActual++;
             contenidoActual.nodeValue = "Puntuación: " + puntuacionActual;
+            reproducirSonidoPop();
             reventarBurbuja(burbuja);
         });
 
@@ -163,11 +193,34 @@ function iniciar() {
         overlay.appendChild(resultado);
         zonaJuego.appendChild(overlay);
 
+        if (hayNuevoRecord) {
+            lanzarConfeti();
+        }
+
         setTimeout(function () {
             if (overlay.parentNode === zonaJuego) {
                 zonaJuego.removeChild(overlay);
             }
         }, 2500);
+    }
+
+    // Genera piezas de confeti animadas cayendo dentro de la zona de juego
+    function lanzarConfeti() {
+        const colores = ["#667eea", "#764ba2", "#f6c945", "#ff6b81", "#4cd97b"];
+        for (let i = 0; i < 40; i++) {
+            const pieza = document.createElement("div");
+            pieza.setAttribute("class", "confeti");
+            pieza.style.left = Math.floor(Math.random() * zonaJuego.clientWidth) + "px";
+            pieza.style.backgroundColor = colores[Math.floor(Math.random() * colores.length)];
+            pieza.style.animationDelay = (Math.random() * 0.3) + "s";
+            zonaJuego.appendChild(pieza);
+
+            setTimeout(function () {
+                if (pieza.parentNode === zonaJuego) {
+                    zonaJuego.removeChild(pieza);
+                }
+            }, 1800);
+        }
     }
 
     crearEvento(botonInicio, "click", iniciarJuego);
