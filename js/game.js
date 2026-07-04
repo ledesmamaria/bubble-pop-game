@@ -1,6 +1,8 @@
 // Cuando la página termina de cargar, inicializamos el juego
 window.addEventListener("load", iniciar, false);
 
+const DURACION_PARTIDA = 30; // segundos
+
 function iniciar() {
     const contenedor = document.createElement("div");
     contenedor.setAttribute("id", "contenedor");
@@ -13,13 +15,15 @@ function iniciar() {
 
     const instrucciones = document.createElement("p");
     instrucciones.setAttribute("class", "instrucciones");
-    instrucciones.textContent = "Pincha las burbujas antes de que desaparezcan. ¡Tienes 30 segundos!";
+    instrucciones.textContent = "Pincha las burbujas antes de que desaparezcan (2 segundos cada una).";
 
     const textoActual = document.createElement("p");
-    const contenidoActual = document.createTextNode("Puntuación actual: 0");
+    textoActual.setAttribute("class", "marcador");
+    const contenidoActual = document.createTextNode("Puntuación: 0");
     textoActual.appendChild(contenidoActual);
 
     const textoMaxima = document.createElement("p");
+    textoMaxima.setAttribute("class", "marcador");
     let puntuacionMaxima = parseInt(localStorage.getItem("puntuacionMaxima"));
     if (isNaN(puntuacionMaxima)) {
         puntuacionMaxima = 0;
@@ -27,11 +31,17 @@ function iniciar() {
     const contenidoMaxima = document.createTextNode("Récord: " + puntuacionMaxima);
     textoMaxima.appendChild(contenidoMaxima);
 
+    const textoTiempo = document.createElement("p");
+    textoTiempo.setAttribute("class", "temporizador");
+    const contenidoTiempo = document.createTextNode(DURACION_PARTIDA + "s");
+    textoTiempo.appendChild(contenidoTiempo);
+
     const botonInicio = document.createElement("button");
     botonInicio.textContent = "Comenzar juego";
     botonInicio.setAttribute("id", "btnInicio");
 
     panelIzquierdo.appendChild(instrucciones);
+    panelIzquierdo.appendChild(textoTiempo);
     panelIzquierdo.appendChild(textoActual);
     panelIzquierdo.appendChild(textoMaxima);
     panelIzquierdo.appendChild(botonInicio);
@@ -46,7 +56,9 @@ function iniciar() {
     document.body.appendChild(contenedor);
 
     let puntuacionActual = 0;
+    let segundosRestantes = DURACION_PARTIDA;
     let intervaloBurbujas;
+    let intervaloTiempo;
 
     // Función cross-browser para registrar eventos (compatibilidad con navegadores antiguos)
     function crearEvento(elemento, tipoEvento, funcion) {
@@ -60,19 +72,28 @@ function iniciar() {
     function iniciarJuego() {
         botonInicio.disabled = true;
         puntuacionActual = 0;
-        contenidoActual.nodeValue = "Puntuación actual: " + puntuacionActual;
+        segundosRestantes = DURACION_PARTIDA;
+        contenidoActual.nodeValue = "Puntuación: " + puntuacionActual;
+        contenidoTiempo.nodeValue = segundosRestantes + "s";
 
         crearBurbuja();
         intervaloBurbujas = setInterval(crearBurbuja, 1000);
-        setTimeout(terminarJuego, 30000);
+
+        intervaloTiempo = setInterval(function () {
+            segundosRestantes--;
+            contenidoTiempo.nodeValue = segundosRestantes + "s";
+            if (segundosRestantes <= 0) {
+                terminarJuego();
+            }
+        }, 1000);
     }
 
     function crearBurbuja() {
         const burbuja = document.createElement("div");
         burbuja.setAttribute("class", "burbuja");
 
-        const posicionX = Math.floor(Math.random() * 500);
-        const posicionY = Math.floor(Math.random() * 500);
+        const posicionX = Math.floor(Math.random() * (zonaJuego.clientWidth - 55));
+        const posicionY = Math.floor(Math.random() * (zonaJuego.clientHeight - 55));
 
         const rojo = Math.floor(Math.random() * 256);
         const verde = Math.floor(Math.random() * 256);
@@ -84,35 +105,69 @@ function iniciar() {
 
         crearEvento(burbuja, "click", function () {
             puntuacionActual++;
-            contenidoActual.nodeValue = "Puntuación actual: " + puntuacionActual;
-            if (burbuja.parentNode === zonaJuego) {
-                zonaJuego.removeChild(burbuja);
-            }
+            contenidoActual.nodeValue = "Puntuación: " + puntuacionActual;
+            reventarBurbuja(burbuja);
         });
 
         zonaJuego.appendChild(burbuja);
 
         setTimeout(function () {
+            reventarBurbuja(burbuja);
+        }, 2000);
+    }
+
+    // Aplica la animación de "reventar" y luego elimina la burbuja del DOM
+    function reventarBurbuja(burbuja) {
+        if (burbuja.parentNode !== zonaJuego) {
+            return;
+        }
+        burbuja.setAttribute("class", "burbuja reventada");
+        setTimeout(function () {
             if (burbuja.parentNode === zonaJuego) {
                 zonaJuego.removeChild(burbuja);
             }
-        }, 2000);
+        }, 200);
     }
 
     function terminarJuego() {
         clearInterval(intervaloBurbujas);
+        clearInterval(intervaloTiempo);
 
         while (zonaJuego.firstChild) {
             zonaJuego.removeChild(zonaJuego.firstChild);
         }
 
-        if (puntuacionActual > puntuacionMaxima) {
+        const hayNuevoRecord = puntuacionActual > puntuacionMaxima;
+        if (hayNuevoRecord) {
             puntuacionMaxima = puntuacionActual;
             localStorage.setItem("puntuacionMaxima", puntuacionMaxima);
             contenidoMaxima.nodeValue = "Récord: " + puntuacionMaxima;
         }
 
+        mostrarPantallaFinal(hayNuevoRecord);
         botonInicio.disabled = false;
+    }
+
+    // Crea una pantalla superpuesta con el resultado final de la partida
+    function mostrarPantallaFinal(hayNuevoRecord) {
+        const overlay = document.createElement("div");
+        overlay.setAttribute("class", "overlay");
+
+        const mensaje = document.createElement("h2");
+        mensaje.textContent = hayNuevoRecord ? "¡Nuevo récord! 🎉" : "¡Partida terminada!";
+
+        const resultado = document.createElement("p");
+        resultado.textContent = "Puntuación final: " + puntuacionActual;
+
+        overlay.appendChild(mensaje);
+        overlay.appendChild(resultado);
+        zonaJuego.appendChild(overlay);
+
+        setTimeout(function () {
+            if (overlay.parentNode === zonaJuego) {
+                zonaJuego.removeChild(overlay);
+            }
+        }, 2500);
     }
 
     crearEvento(botonInicio, "click", iniciarJuego);
