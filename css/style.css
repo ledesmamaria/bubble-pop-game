@@ -1,0 +1,29 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+#contenedor {
+    display: flex;
+    gap: 20px;
+}
+
+#panelIzquierdo {
+    width: 250px;
+    padding: 20px;
+}
+
+#zonaJuego {
+    width: 600px;
+    height: 600px;
+    border: 2px solid black;
+    position: relative;
+}
+
+.burbuja {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    position: absolute;
+    cursor: pointer;
+}
