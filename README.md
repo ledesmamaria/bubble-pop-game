@@ -44,7 +44,7 @@ Este proyecto surge de una tarea del ciclo de Desarrollo de Aplicaciones Web (DA
 - Buenas prácticas de experiencia de usuario: temporizadores visibles, feedback inmediato (sonido, animaciones) y controles accesibles.
 
 ## Estructura del proyecto
-
+```text
 bubble-pop-game/
 ├── index.html
 ├── css/
@@ -52,7 +52,7 @@ bubble-pop-game/
 ├── js/
 │   └── game.js
 └── juego.gif
-
+```
 ## Autora
 
 María Ledesma
